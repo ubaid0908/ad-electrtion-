@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — AD Electrician ⚡</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --yellow: #FFD60A;
+      --yellow-dim: rgba(255, 214, 10, 0.12);
+      --yellow-border: rgba(255, 214, 10, 0.3);
+      --black: #080808;
+      --dark: #111111;
+      --card: #161616;
+      --card2: #1c1c1c;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f0;
+      --muted: #666;
+      --red: #ff4757;
+      --green: #2ed573;
+      --blue: #1e90ff;
+      --sidebar-w: 260px;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─── LOGIN SCREEN ─── */
+    #login-screen {
+      position: fixed; inset: 0;
+      background: var(--black);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+    }
+    .login-box {
+      background: var(--card);
+      border: 1px solid var(--yellow-border);
+      border-radius: 20px;
+      padding: 50px 44px;
+      width: 100%; max-width: 420px;
+      text-align: center;
+    }
+    .login-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      color: var(--yellow);
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+    .login-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+    .login-box label { display: block; text-align: left; font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .login-box input {
+      width: 100%; background: var(--black); border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px 16px; color: var(--text);
+      font-family: inherit; font-size: 15px; margin-bottom: 18px;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus { outline: none; border-color: var(--yellow); }
+    .login-btn {
+      width: 100%; background: var(--yellow); color: #000;
+      border: none; border-radius: 10px; padding: 14px;
+      font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+      cursor: pointer; letter-spacing: 1px; transition: opacity 0.2s;
+    }
+    .login-btn:hover { opacity: 0.88; }
+    .login-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; }
+
+    /* ─── SIDEBAR ─── */
+    #app { display: none; width: 100%; }
+    .sidebar {
+      width: var(--sidebar-w); min-height: 100vh;
+      background: var(--dark); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100; transition: transform 0.3s;
+    }
+    .sidebar-logo {
+      padding: 28px 24px 24px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem; letter-spacing: 2px; color: var(--yellow);
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo span { font-size: 1.3rem; }
+    .sidebar-nav { flex: 1; padding: 20px 12px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px; cursor: pointer;
+      font-size: 14px; color: var(--muted); font-weight: 500;
+      transition: all 0.2s; margin-bottom: 4px; user-select: none;
+    }
+    .nav-item:hover { background: var(--yellow-dim); color: var(--text); }
+    .nav-item.active { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow-border); }
+    .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .nav-badge {
+      margin-left: auto; background: var(--red); color: #fff;
+      font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 700;
+    }
+    .sidebar-footer {
+      padding: 16px 12px; border-top: 1px solid var(--border);
+    }
+    .logout-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px; cursor: pointer;
+      font-size: 14px; color: var(--red); font-weight: 500;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,71,87,0.08); }
+
+    /* ─── MAIN CONTENT ─── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1; min-height: 100vh;
+      padding: 36px 40px;
+    }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 36px;
+    }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; }
+    .page-title span { color: var(--yellow); }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .admin-chip {
+      background: var(--yellow-dim); border: 1px solid var(--yellow-border);
+      color: var(--yellow); padding: 8px 16px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+    }
+    .hamburger-top {
+      display: none; background: none; border: none; color: var(--text);
+      font-size: 1.5rem; cursor: pointer;
+    }
+
+    /* ─── SECTIONS ─── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif; font-size: 1rem;
+      letter-spacing: 1px; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+
+    /* ─── DASHBOARD STATS ─── */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px 24px;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--yellow);
+    }
+    .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--yellow); }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    /* ─── TABLE ─── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th {
+      text-align: left; padding: 10px 14px;
+      color: var(--muted); font-size: 11px; letter-spacing: 1px;
+      text-transform: uppercase; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ─── BADGES ─── */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    }
+    .badge-new { background: rgba(30,144,255,0.15); color: var(--blue); border: 1px solid rgba(30,144,255,0.3); }
+    .badge-read { background: rgba(102,102,102,0.15); color: var(--muted); border: 1px solid var(--border); }
+    .badge-res { background: rgba(255,214,10,0.12); color: var(--yellow); border: 1px solid var(--yellow-border); }
+    .badge-com { background: rgba(30,144,255,0.12); color: var(--blue); border: 1px solid rgba(30,144,255,0.3); }
+    .badge-sol { background: rgba(46,213,115,0.12); color: var(--green); border: 1px solid rgba(46,213,115,0.3); }
+    .badge-ind { background: rgba(255,71,87,0.12); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+
+    /* ─── BUTTONS ─── */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 9px; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+    .btn-yellow { background: var(--yellow); color: #000; }
+    .btn-yellow:hover { opacity: 0.85; }
+    .btn-ghost { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+    .btn-danger { background: rgba(255,71,87,0.1); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+    .btn-danger:hover { background: rgba(255,71,87,0.2); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* ─── SECTION HEADER ─── */
+    .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .sec-head h2 { font-family: 'Syne', sans-serif; font-size: 1.2rem; }
+
+    /* ─── FORMS ─── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 7px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--black); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      color: var(--text); font-family: inherit; font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--yellow);
+    }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .form-group select option { background: var(--dark); }
+
+    /* ─── PROJECTS GRID ─── */
+    .projects-admin-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .proj-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .proj-thumb-admin {
+      height: 130px; background: var(--card2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .proj-body { padding: 16px; }
+    .proj-body h4 { font-size: 15px; margin-bottom: 6px; }
+    .proj-body p { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+    .proj-actions { display: flex; gap: 8px; }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: none; align-items: center; justify-content: center; z-index: 999;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--yellow-border);
+      border-radius: 20px; padding: 36px; width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .modal-head h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 30px; right: 30px;
+      background: var(--yellow); color: #000;
+      padding: 14px 22px; border-radius: 12px;
+      font-weight: 600; font-size: 14px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s; z-index: 9999;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── SETTINGS ─── */
+    .settings-section { margin-bottom: 28px; }
+    .settings-section h3 { font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: 16px; color: var(--yellow); }
+
+    /* ─── MESSAGE DETAIL ─── */
+    .msg-detail p { font-size: 15px; line-height: 1.7; color: var(--muted); margin-bottom: 18px; }
+    .msg-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+    .msg-meta-item label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .msg-meta-item span { font-size: 14px; }
+
+    /* ─── MOBILE ─── */
+    .overlay-mob {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99;
+    }
+
+    @media (max-width: 1100px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .projects-admin-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .overlay-mob.open { display: block; }
+      .main { margin-left: 0; padding: 24px 18px; }
+      .hamburger-top { display: block; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .projects-admin-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><span>⚡</span> AD ELECTRICIAN</div>
+    <div class="login-sub">Admin Panel — Restricted Access</div>
+    <label>Username</label>
+    <input type="text" id="login-user" placeholder="admin" autocomplete="off" />
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="••••••••" />
+    <button class="login-btn" onclick="doLogin()">LOGIN →</button>
+    <div class="login-error" id="login-err">❌ Wrong credentials. Try again.</div>
+    <p style="font-size:12px;color:var(--muted);margin-top:18px;">Default: admin / admin123</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="overlay-mob" id="mob-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><span>⚡</span> AD ELECTRICIAN</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="goTo('dashboard',this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="goTo('messages',this)">
+        <span class="nav-icon">✉️</span> Messages
+        <span class="nav-badge" id="msg-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="goTo('projects',this)">
+        <span class="nav-icon">🏗️</span> Projects
+      </div>
+      <div class="nav-item" onclick="goTo('services',this)">
+        <span class="nav-icon">⚡</span> Services
+      </div>
+      <div class="nav-item" onclick="goTo('settings',this)">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="doLogout()">
+        <span>🚪</span> Logout
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h1 class="page-title" id="page-title">Dashboard <span>Overview</span></h1>
+      <div class="topbar-right">
+        <button class="hamburger-top" onclick="openSidebar()">☰</button>
+        <div class="admin-chip">⚡ Admin</div>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD ── -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Messages</div>
+          <div class="stat-value" id="d-msgs">5</div>
+          <div class="stat-sub">3 unread</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Projects</div>
+          <div class="stat-value" id="d-projs">9</div>
+          <div class="stat-sub">All categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Services Listed</div>
+          <div class="stat-value" id="d-servs">9</div>
+          <div class="stat-sub">All active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Happy Clients</div>
+          <div class="stat-value">2500+</div>
+          <div class="stat-sub">Since 2010</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-title">Recent Messages</div>
+          <div class="table-wrap">
+            <table id="dash-msg-table">
+              <thead><tr><th>Name</th><th>Service</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Quick Stats</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;justify-content:space-between;padding:14px;background:var(--card2);border-radius:10px;">
+              <span>Years Experience</span><strong style="color:var(--yellow)">15+</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:14px;background:var(--card2);border-radius:10px;">
+              <span>Team Members</span><strong style="color:var(--yellow)">50+</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:14px;background:var(--card2);border-radius:10px;">
+              <span>Satisfaction Rate</span><strong style="color:var(--yellow)">98%</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:14px;background:var(--card2);border-radius:10px;">
+              <span>Emergency Support</span><strong style="color:var(--green)">24/7 ✓</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div class="section" id="sec-messages">
+      <div class="sec-head">
+        <h2>Contact Messages</h2>
+        <button class="btn btn-danger btn-sm" onclick="clearAllMsgs()">🗑 Clear All</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="msg-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Email</th><th>Phone</th>
+                <th>Service</th><th>Date</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROJECTS ── -->
+    <div class="section" id="sec-projects">
+      <div class="sec-head">
+        <h2>Manage Projects</h2>
+        <button class="btn btn-yellow" onclick="openProjModal()">+ Add Project</button>
+      </div>
+      <div class="projects-admin-grid" id="proj-grid"></div>
+    </div>
+
+    <!-- ── SERVICES ── -->
+    <div class="section" id="sec-services">
+      <div class="sec-head">
+        <h2>Manage Services</h2>
+        <button class="btn btn-yellow" onclick="openServModal()">+ Add Service</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="serv-table">
+            <thead><tr><th>#</th><th>Icon</th><th>Service Name</th><th>Description</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="section" id="sec-settings">
+      <div class="settings-section">
+        <h3>📞 Contact Info</h3>
+        <div class="card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="s-phone" value="+92 300 123 4567" />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="s-email" value="ubaidurrahman1429@gmail.com" />
+            </div>
+            <div class="form-group full">
+              <label>Office Address</label>
+              <input type="text" id="s-address" value="123 Voltage Street, City Center" />
+            </div>
+            <div class="form-group">
+              <label>Business Hours</label>
+              <input type="text" id="s-hours" value="Mon–Sat: 8 AM – 8 PM" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>🔒 Change Password</h3>
+        <div class="card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="s-oldpass" placeholder="Current password" />
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="s-newpass" placeholder="New password" />
+            </div>
+          </div>
+          <div style="margin-top:18px;">
+            <button class="btn btn-yellow" onclick="changePass()">Update Password</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:4px;">
+        <button class="btn btn-yellow" onclick="saveSettings()">💾 Save All Settings</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: View Message -->
+<div class="modal-overlay" id="modal-msg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📨 Message Detail</h3>
+      <button class="modal-close" onclick="closeModal('modal-msg')">✕</button>
+    </div>
+    <div id="modal-msg-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="deleteMsgFromModal()">🗑 Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-msg')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add/Edit Project -->
+<div class="modal-overlay" id="modal-proj">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="proj-modal-title">🏗️ Add Project</h3>
+      <button class="modal-close" onclick="closeModal('modal-proj')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Project Title</label>
+        <input type="text" id="p-title" placeholder="Modern Villa Wiring" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="p-cat">
+          <option>Residential</option><option>Commercial</option>
+          <option>Solar</option><option>Industrial</option>
+          <option>Lighting</option><option>Generator</option>
+          <option>EV Charging</option><option>Smart Home</option><option>Safety</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea id="p-desc" placeholder="Brief description..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Emoji Icon</label>
+        <input type="text" id="p-icon" placeholder="🏠" maxlength="4" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-proj')">Cancel</button>
+      <button class="btn btn-yellow" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add/Edit Service -->
+<div class="modal-overlay" id="modal-serv">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="serv-modal-title">⚡ Add Service</h3>
+      <button class="modal-close" onclick="closeModal('modal-serv')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Service Name</label>
+        <input type="text" id="sv-name" placeholder="Residential Wiring" />
+      </div>
+      <div class="form-group">
+        <label>Icon (emoji)</label>
+        <input type="text" id="sv-icon" placeholder="⚡" maxlength="4" />
+      </div>
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea id="sv-desc" placeholder="Short service description..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-serv')">Cancel</button>
+      <button class="btn btn-yellow" onclick="saveService()">Save Service</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─── AUTH ───
+const CREDS = { user: 'admin', pass: 'admin123' };
+let currentPass = 'admin123';
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  if (u === CREDS.user && p === currentPass) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ─── NAVIGATION ───
+function goTo(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  el.classList.add('active');
+  const titles = { dashboard:'Dashboard <span>Overview</span>', messages:'Contact <span>Messages</span>', projects:'Manage <span>Projects</span>', services:'Our <span>Services</span>', settings:'Site <span>Settings</span>' };
+  document.getElementById('page-title').innerHTML = titles[id];
+  closeSidebar();
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('mob-overlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mob-overlay').classList.remove('open');
+}
+
+// ─── DATA ───
+// Load messages from localStorage (saved by contact form)
+// Falls back to demo data if no real messages yet
+const STORAGE_KEY = 'ad_messages';
+
+function loadMessages() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
+  // Demo data shown until real messages arrive
+  return [
+    { id:1, name:'Sarah Khan', email:'sarah@gmail.com', phone:'+92 301 111 2222', service:'Residential Wiring', message:'I need complete rewiring for my 4-bedroom house. Please send a quote.', date:'2026-05-14', status:'new' },
+    { id:2, name:'Bilal Ahmed', email:'bilal@gmail.com', phone:'+92 312 333 4444', service:'Solar Installation', message:'Interested in 10kW solar setup for my factory. What are the options?', date:'2026-05-15', status:'new' },
+    { id:3, name:'Fatima Malik', email:'fatima@yahoo.com', phone:'+92 333 555 6666', service:'Smart Home', message:'I want Alexa and Google integration in my new home. Can you help?', date:'2026-05-16', status:'new' },
+    { id:4, name:'Omar Raza', email:'omar@hotmail.com', phone:'+92 345 777 8888', service:'Emergency Repair', message:'Power outage at my restaurant. Need urgent help tonight.', date:'2026-05-17', status:'read' },
+    { id:5, name:'Ayesha Siddiqui', email:'ayesha@gmail.com', phone:'+92 321 999 0000', service:'Commercial Setup', message:'New office building, 8 floors. Need full electrical setup quote.', date:'2026-05-17', status:'read' },
+  ];
+}
+
+function saveMessages() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+}
+
+let messages = loadMessages();
+let msgIdCounter = Date.now();
+let viewingMsgId = null;
+
+let projects = [
+  { id:1, title:'Modern Villa Wiring', cat:'Residential', desc:'Complete rewiring + smart home automation for a 5-bedroom luxury villa.', icon:'🏠' },
+  { id:2, title:'15kW Rooftop Solar', cat:'Solar', desc:'Off-grid solar system with lithium battery backup for an eco-friendly home.', icon:'☀️' },
+  { id:3, title:'Office Tower Setup', cat:'Commercial', desc:'Full electrical installation for a 12-floor commercial building.', icon:'🏢' },
+  { id:4, title:'Restaurant Ambient Lighting', cat:'Lighting', desc:'Mood-based LED & smart lighting for a 200-seat fine-dining restaurant.', icon:'💡' },
+  { id:5, title:'Factory Power Distribution', cat:'Industrial', desc:'High-voltage distribution & machine wiring for a 50,000 sq ft plant.', icon:'🏭' },
+  { id:6, title:'Hospital Backup Power', cat:'Generator', desc:'ATS + 250kVA standby generator installation for a private hospital.', icon:'🏥' },
+  { id:7, title:'Apartment EV Stations', cat:'EV Charging', desc:'20-unit residential complex with shared EV charging infrastructure.', icon:'🔌' },
+  { id:8, title:'School Safety Audit', cat:'Safety', desc:'Complete electrical safety inspection & upgrade for a K-12 school.', icon:'🏫' },
+  { id:9, title:'Smart Penthouse', cat:'Smart Home', desc:'Full Alexa/Google integration with 100+ smart devices.', icon:'🏙️' },
+];
+let projIdCounter = 10;
+let editProjId = null;
+
+let services = [
+  { id:1, name:'Residential Wiring', icon:'⚡', desc:'Complete home wiring, rewiring, panel upgrades and safety inspections.' },
+  { id:2, name:'Commercial Setup', icon:'🏢', desc:'Office buildings, retail spaces and large-scale electrical installation.' },
+  { id:3, name:'Solar Installation', icon:'☀️', desc:'Eco-friendly solar panel systems with battery backup.' },
+  { id:4, name:'Lighting Design', icon:'💡', desc:'LED, recessed, ambient and energy-efficient lighting setups.' },
+  { id:5, name:'Generator Service', icon:'🔋', desc:'Generator installation, maintenance and 24/7 emergency repairs.' },
+  { id:6, name:'Smart Home', icon:'🏠', desc:'Smart switches, automation, voice control and IoT integration.' },
+  { id:7, name:'EV Charging', icon:'🔌', desc:'Home & commercial EV charging station installation.' },
+  { id:8, name:'Safety Inspection', icon:'🛡️', desc:'Complete electrical safety audits and code compliance checks.' },
+  { id:9, name:'24/7 Emergency', icon:'🚨', desc:'Round-the-clock emergency response — always on call.' },
+];
+let servIdCounter = 10;
+let editServId = null;
+
+// ─── INIT ───
+function initApp() {
+  renderMsgs();
+  renderDashMsgs();
+  renderProjects();
+  renderServices();
+  updateBadge();
+  updateDashStats();
+}
+
+// ─── MESSAGES ───
+function updateBadge() {
+  const unread = messages.filter(m => m.status === 'new').length;
+  const b = document.getElementById('msg-badge');
+  b.textContent = unread;
+  b.style.display = unread ? 'inline-block' : 'none';
+}
+
+function renderMsgs() {
+  const tbody = document.querySelector('#msg-table tbody');
+  tbody.innerHTML = '';
+  if (!messages.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">No messages yet.</td></tr>';
+    return;
+  }
+  messages.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${m.name}</strong></td>
+      <td style="color:var(--muted)">${m.email}</td>
+      <td style="color:var(--muted)">${m.phone}</td>
+      <td><span class="badge badge-res">${m.service}</span></td>
+      <td style="color:var(--muted)">${m.date}</td>
+      <td><span class="badge ${m.status==='new'?'badge-new':'badge-read'}">${m.status==='new'?'New':'Read'}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="viewMsg(${m.id})">View</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMsg(${m.id})" style="margin-left:6px">🗑</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDashMsgs() {
+  const tbody = document.querySelector('#dash-msg-table tbody');
+  tbody.innerHTML = '';
+  messages.slice(0,4).forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><strong>${m.name}</strong></td><td style="color:var(--muted)">${m.service}</td><td><span class="badge ${m.status==='new'?'badge-new':'badge-read'}">${m.status==='new'?'New':'Read'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  if (!messages.length) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px;">No messages.</td></tr>';
+}
+
+function viewMsg(id) {
+  const m = messages.find(x => x.id === id);
+  if (!m) return;
+  m.status = 'read';
+  viewingMsgId = id;
+  saveMessages();
+  updateBadge();
+  renderMsgs();
+  document.getElementById('modal-msg-body').innerHTML = `
+    <div class="msg-meta">
+      <div class="msg-meta-item"><label>Name</label><span>${m.name}</span></div>
+      <div class="msg-meta-item"><label>Email</label><span>${m.email}</span></div>
+      <div class="msg-meta-item"><label>Phone</label><span>${m.phone}</span></div>
+      <div class="msg-meta-item"><label>Service</label><span>${m.service}</span></div>
+      <div class="msg-meta-item"><label>Date</label><span>${m.date}</span></div>
+      <div class="msg-meta-item"><label>Status</label><span>Read ✓</span></div>
+    </div>
+    <div class="msg-detail">
+      <p style="background:var(--card2);padding:18px;border-radius:12px;border-left:3px solid var(--yellow);">"${m.message}"</p>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+      <a href="https://wa.me/${m.phone.replace(/\D/g,'')}" target="_blank"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:#25D366;color:#fff;border-radius:9px;text-decoration:none;font-weight:600;font-size:13px;">
+        📱 WhatsApp
+      </a>
+      <a href="tel:${m.phone}"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:9px;text-decoration:none;font-weight:600;font-size:13px;">
+        📞 Call
+      </a>
+      <a href="mailto:${m.email}"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:9px;text-decoration:none;font-weight:600;font-size:13px;">
+        ✉️ Email
+      </a>
+    </div>`;
+  document.getElementById('modal-msg').classList.add('open');
+}
+
+function deleteMsgFromModal() {
+  deleteMsg(viewingMsgId);
+  closeModal('modal-msg');
+}
+
+function deleteMsg(id) {
+  messages = messages.filter(m => m.id !== id);
+  saveMessages();
+  renderMsgs(); renderDashMsgs(); updateBadge(); updateDashStats();
+  toast('Message deleted');
+}
+
+function clearAllMsgs() {
+  if (!confirm('Delete all messages?')) return;
+  messages = [];
+  saveMessages();
+  renderMsgs(); renderDashMsgs(); updateBadge(); updateDashStats();
+  toast('All messages cleared');
+}
+
+// ─── PROJECTS ───
+function renderProjects() {
+  const grid = document.getElementById('proj-grid');
+  grid.innerHTML = '';
+  const catClass = { Residential:'badge-res', Commercial:'badge-com', Solar:'badge-sol', Industrial:'badge-ind', Lighting:'badge-res', Generator:'badge-ind', 'EV Charging':'badge-com', 'Smart Home':'badge-sol', Safety:'badge-res' };
+  projects.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'proj-card';
+    div.innerHTML = `
+      <div class="proj-thumb-admin">${p.icon}</div>
+      <div class="proj-body">
+        <span class="badge ${catClass[p.cat]||'badge-read'}" style="margin-bottom:10px;display:inline-block">${p.cat}</span>
+        <h4>${p.title}</h4>
+        <p>${p.desc}</p>
+        <div class="proj-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editProj(${p.id})">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProj(${p.id})">🗑</button>
+        </div>
+      </div>`;
+    grid.appendChild(div);
+  });
+  updateDashStats();
+}
+
+function openProjModal(reset=true) {
+  if (reset) {
+    editProjId = null;
+    document.getElementById('proj-modal-title').textContent = '🏗️ Add Project';
+    document.getElementById('p-title').value = '';
+    document.getElementById('p-cat').value = 'Residential';
+    document.getElementById('p-desc').value = '';
+    document.getElementById('p-icon').value = '🏠';
+  }
+  document.getElementById('modal-proj').classList.add('open');
+}
+
+function editProj(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  editProjId = id;
+  document.getElementById('proj-modal-title').textContent = '✏️ Edit Project';
+  document.getElementById('p-title').value = p.title;
+  document.getElementById('p-cat').value = p.cat;
+  document.getElementById('p-desc').value = p.desc;
+  document.getElementById('p-icon').value = p.icon;
+  openProjModal(false);
+}
+
+function saveProject() {
+  const t = document.getElementById('p-title').value.trim();
+  if (!t) { toast('Please enter a title'); return; }
+  const obj = { title: t, cat: document.getElementById('p-cat').value, desc: document.getElementById('p-desc').value.trim(), icon: document.getElementById('p-icon').value.trim() || '🏠' };
+  if (editProjId) {
+    const i = projects.findIndex(x => x.id === editProjId);
+    projects[i] = { ...projects[i], ...obj };
+    toast('Project updated');
+  } else {
+    projects.unshift({ id: projIdCounter++, ...obj });
+    toast('Project added');
+  }
+  closeModal('modal-proj');
+  renderProjects();
+}
+
+function deleteProj(id) {
+  if (!confirm('Delete this project?')) return;
+  projects = projects.filter(p => p.id !== id);
+  renderProjects();
+  toast('Project deleted');
+}
+
+// ─── SERVICES ───
+function renderServices() {
+  const tbody = document.querySelector('#serv-table tbody');
+  tbody.innerHTML = '';
+  services.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-size:1.4rem">${s.icon}</td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--muted);max-width:300px">${s.desc}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editServ(${s.id})">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteServ(${s.id})" style="margin-left:6px">🗑</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  updateDashStats();
+}
+
+function openServModal(reset=true) {
+  if (reset) {
+    editServId = null;
+    document.getElementById('serv-modal-title').textContent = '⚡ Add Service';
+    document.getElementById('sv-name').value = '';
+    document.getElementById('sv-icon').value = '';
+    document.getElementById('sv-desc').value = '';
+  }
+  document.getElementById('modal-serv').classList.add('open');
+}
+
+function editServ(id) {
+  const s = services.find(x => x.id === id);
+  if (!s) return;
+  editServId = id;
+  document.getElementById('serv-modal-title').textContent = '✏️ Edit Service';
+  document.getElementById('sv-name').value = s.name;
+  document.getElementById('sv-icon').value = s.icon;
+  document.getElementById('sv-desc').value = s.desc;
+  openServModal(false);
+}
+
+function saveService() {
+  const n = document.getElementById('sv-name').value.trim();
+  if (!n) { toast('Please enter service name'); return; }
+  const obj = { name: n, icon: document.getElementById('sv-icon').value.trim() || '⚡', desc: document.getElementById('sv-desc').value.trim() };
+  if (editServId) {
+    const i = services.findIndex(x => x.id === editServId);
+    services[i] = { ...services[i], ...obj };
+    toast('Service updated');
+  } else {
+    services.push({ id: servIdCounter++, ...obj });
+    toast('Service added');
+  }
+  closeModal('modal-serv');
+  renderServices();
+}
+
+function deleteServ(id) {
+  if (!confirm('Delete this service?')) return;
+  services = services.filter(s => s.id !== id);
+  renderServices();
+  toast('Service deleted');
+}
+
+// ─── SETTINGS ───
+function saveSettings() {
+  toast('✅ Settings saved! (Update your HTML files with new values)');
+}
+function changePass() {
+  const old = document.getElementById('s-oldpass').value;
+  const nw = document.getElementById('s-newpass').value;
+  if (old !== currentPass) { toast('❌ Current password wrong'); return; }
+  if (nw.length < 6) { toast('❌ New password too short'); return; }
+  currentPass = nw;
+  document.getElementById('s-oldpass').value = '';
+  document.getElementById('s-newpass').value = '';
+  toast('✅ Password changed');
+}
+
+// ─── HELPERS ───
+function updateDashStats() {
+  document.getElementById('d-msgs').textContent = messages.length;
+  document.getElementById('d-projs').textContent = projects.length;
+  document.getElementById('d-servs').textContent = services.length;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

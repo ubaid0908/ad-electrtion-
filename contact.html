@@ -170,5 +170,41 @@
   </footer>
 
   <script src="js/script.js"></script>
+  <script>
+    // ─── CONTACT FORM → localStorage (Admin Panel connection) ───
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const newMsg = {
+        id: Date.now(),
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        phone: form.phone.value.trim() || '—',
+        service: form.service.value,
+        message: form.message.value.trim(),
+        date: new Date().toISOString().split('T')[0],
+        status: 'new'
+      };
+
+      // Load existing messages from localStorage
+      const existing = JSON.parse(localStorage.getItem('ad_messages') || '[]');
+      existing.unshift(newMsg); // newest first
+      localStorage.setItem('ad_messages', JSON.stringify(existing));
+
+      // Show success message
+      form.reset();
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.innerHTML;
+      btn.innerHTML = '✅ Message Sent!';
+      btn.style.background = '#2ed573';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.style.background = '';
+        btn.disabled = false;
+      }, 3500);
+    });
+  </script>
 </body>
 </html>
